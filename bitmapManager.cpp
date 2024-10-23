@@ -34,6 +34,7 @@ void invert_image(void);
 void quantize_image(void);
 void flip_horizontal_image(void);
 void crop_image(void);
+void generate_and_plot_histogram(void);
 void histogram_equalization(void);
 void rotate_image(void);
 
@@ -80,8 +81,9 @@ int main()
 		printf("\n\t 5 - Quantize image");
 		printf("\n\t 6 - Flip image horizontally");
 		printf("\n\t 7 - Crop image <EXPERIMENTAL>");
-		printf("\n\t 8 - Apply Histogram Equalization");
-		printf("\n\t 9 - Rotate the image");
+		printf("\n\t 8 - Generate and Plot Histogram");
+		printf("\n\t 9 - Apply Histogram Equalization");
+		printf("\n\t 10 - Rotate the image");
 		printf("\n\t-1 - Quit");
 
 		printf("\n\n\t Choice >> ");
@@ -113,9 +115,12 @@ int main()
 			crop_image();
 			break;
 		case 8:
-			histogram_equalization();  // Apply histogram equalization
+			generate_and_plot_histogram();  // Generate and plot histogram automatically
     		break;
 		case 9:
+			histogram_equalization();  // Apply histogram equalization
+    		break;
+		case 10:
 			rotate_image();  // Ask for the rotation angle and rotate accordingly
 			break;
 		default:
@@ -398,6 +403,51 @@ void crop_image()
 		}
 		free_pixels(image);
 	}
+}
+
+void generate_and_plot_histogram() {
+    RGB_Image image;
+    int failedToLoad = load_image(&image);  // Load the image
+    if (failedToLoad) {
+        printf("\n Failed to load image.\n");
+        return;
+    }
+
+    // Initialize a histogram array for grayscale values (0-255)
+    int histogram[256] = {0};
+
+    // Step 1: Compute the histogram
+    for (int i = 0; i < image.height; ++i) {
+        for (int j = 0; j < image.width; ++j) {
+            // Convert pixel to grayscale using a weighted sum
+            unsigned char gray_value = 0.3 * image.pixels[i][j].red + 
+                                       0.59 * image.pixels[i][j].green + 
+                                       0.11 * image.pixels[i][j].blue;
+            histogram[gray_value]++;
+        }
+    }
+
+    // Step 2: Save the histogram data to a CSV file (in the background)
+    FILE* fptr = fopen("histogram_data.csv", "w");
+    if (fptr == NULL) {
+        printf("\n Error saving histogram data.\n");
+        return;
+    }
+    fprintf(fptr, "Intensity,Count\n");
+    for (int i = 0; i < 256; ++i) {
+        fprintf(fptr, "%d,%d\n", i, histogram[i]);  // Save intensity and count
+    }
+    fclose(fptr);
+    printf("\n Histogram data saved to 'histogram_data.csv'.\n");
+
+    // Step 3: Use gnuplot to automatically plot the histogram
+    system("gnuplot -e \"set datafile separator ','; set title 'Image Histogram'; "
+           "set xlabel 'Pixel Intensity'; set ylabel 'Pixel Count'; "
+           "set style fill solid; plot 'histogram_data.csv' using 1:2 with boxes notitle; pause -1\"");
+    printf("\n Histogram plotted using gnuplot.\n");
+
+    // Clean up
+    free_pixels(image);
 }
 
 void histogram_equalization() {
