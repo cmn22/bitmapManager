@@ -26,7 +26,6 @@ typedef struct {
 
 
 // Main function Prototypes
-
 void print_information_image(void);
 void save_copy_image(void);
 void change_luminosity_image(void);
@@ -36,6 +35,12 @@ void quantize_image(void);
 void flip_horizontal_image(void);
 void crop_image(void);
 void histogram_equalization(void);
+void rotate_image(void);
+
+// ROTATE Functions
+void rotate_image_90(RGB_Image* image);
+void rotate_image_180(RGB_Image* image);
+void rotate_image_270(RGB_Image* image);
 
 // FILE Functions
 int load_image(RGB_Image*);
@@ -76,6 +81,7 @@ int main()
 		printf("\n\t 6 - Flip image horizontally");
 		printf("\n\t 7 - Crop image <EXPERIMENTAL>");
 		printf("\n\t 8 - Apply Histogram Equalization");
+		printf("\n\t 9 - Rotate the image");
 		printf("\n\t-1 - Quit");
 
 		printf("\n\n\t Choice >> ");
@@ -109,6 +115,9 @@ int main()
 		case 8:
 			histogram_equalization();  // Apply histogram equalization
     		break;
+		case 9:
+			rotate_image();  // Ask for the rotation angle and rotate accordingly
+			break;
 		default:
 			continue;
 		}
@@ -442,6 +451,107 @@ void histogram_equalization() {
     save_image(image);  // Save the modified image
     free_pixels(image);
     printf("\n Histogram equalization applied and image saved.\n");
+}
+
+void rotate_image_90(RGB_Image* image) {
+    int new_height = image->width;
+    int new_width = image->height;
+
+    // Allocate memory for the rotated image
+    Pixel** rotated_pixels = (Pixel**)malloc(new_height * sizeof(Pixel*));
+    for (int i = 0; i < new_height; ++i) {
+        rotated_pixels[i] = (Pixel*)malloc(new_width * sizeof(Pixel));
+    }
+
+    // Rotate by 90 degrees clockwise
+    for (int i = 0; i < image->height; ++i) {
+        for (int j = 0; j < image->width; ++j) {
+            rotated_pixels[j][image->height - 1 - i] = image->pixels[i][j];
+        }
+    }
+
+    // Replace original pixel data with rotated data
+    free_pixels(*image);  // Free original pixels
+    image->pixels = rotated_pixels;
+    image->width = new_width;
+    image->height = new_height;
+    printf("\n Image rotated by 90 degrees.\n");
+}
+
+void rotate_image_180(RGB_Image* image) {
+    // Rotate by 180 degrees
+    for (int i = 0; i < image->height / 2; ++i) {
+        for (int j = 0; j < image->width; ++j) {
+            Pixel temp = image->pixels[i][j];
+            image->pixels[i][j] = image->pixels[image->height - 1 - i][image->width - 1 - j];
+            image->pixels[image->height - 1 - i][image->width - 1 - j] = temp;
+        }
+    }
+    printf("\n Image rotated by 180 degrees.\n");
+}
+
+void rotate_image_270(RGB_Image* image) {
+    int new_height = image->width;
+    int new_width = image->height;
+
+    // Allocate memory for the rotated image
+    Pixel** rotated_pixels = (Pixel**)malloc(new_height * sizeof(Pixel*));
+    for (int i = 0; i < new_height; ++i) {
+        rotated_pixels[i] = (Pixel*)malloc(new_width * sizeof(Pixel));
+    }
+
+    // Rotate by 270 degrees clockwise (which is -90 degrees)
+    for (int i = 0; i < image->height; ++i) {
+        for (int j = 0; j < image->width; ++j) {
+            rotated_pixels[image->width - 1 - j][i] = image->pixels[i][j];
+        }
+    }
+
+    // Replace original pixel data with rotated data
+    free_pixels(*image);  // Free original pixels
+    image->pixels = rotated_pixels;
+    image->width = new_width;
+    image->height = new_height;
+    printf("\n Image rotated by 270 degrees.\n");
+}
+
+void rotate_image() {
+    RGB_Image image;
+    int failedToLoad = load_image(&image);  // Load the image
+    if (failedToLoad) {
+        printf("\n Failed to load image.\n");
+        return;
+    }
+
+    int choice = 0;
+    printf("\n Choose the rotation angle:\n"
+           "\n 1. Rotate 90 degrees"
+           "\n 2. Rotate 180 degrees"
+           "\n 3. Rotate 270 degrees\n > ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            rotate_image_90(&image);
+            strcat(image.file_name, "_rotated_90");
+            break;
+        case 2:
+            rotate_image_180(&image);
+            strcat(image.file_name, "_rotated_180");
+            break;
+        case 3:
+            rotate_image_270(&image);
+            strcat(image.file_name, "_rotated_270");
+            break;
+        default:
+            printf("\n Invalid choice.\n");
+            free_pixels(image);  // Clean up memory
+            return;
+    }
+
+    save_image(image);  // Save the modified image
+    free_pixels(image); // Free the pixel memory
+    printf("\n Image rotation saved.\n");
 }
 
 void flip_horizontal_image()
