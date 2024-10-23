@@ -35,6 +35,7 @@ void invert_image(void);
 void quantize_image(void);
 void flip_horizontal_image(void);
 void crop_image(void);
+void histogram_equalization(void);
 
 // FILE Functions
 int load_image(RGB_Image*);
@@ -74,6 +75,7 @@ int main()
 		printf("\n\t 5 - Quantize image");
 		printf("\n\t 6 - Flip image horizontally");
 		printf("\n\t 7 - Crop image <EXPERIMENTAL>");
+		printf("\n\t 8 - Apply Histogram Equalization");
 		printf("\n\t-1 - Quit");
 
 		printf("\n\n\t Choice >> ");
@@ -104,6 +106,9 @@ int main()
 		case 7:
 			crop_image();
 			break;
+		case 8:
+			histogram_equalization();  // Apply histogram equalization
+    		break;
 		default:
 			continue;
 		}
@@ -385,6 +390,60 @@ void crop_image()
 		free_pixels(image);
 	}
 }
+
+void histogram_equalization() {
+    RGB_Image image;
+    int failedToLoad = load_image(&image);  // Load the image
+
+    if (failedToLoad) {
+        printf("\n Failed to load image.\n");
+        return;
+    }
+
+    int histogram[256] = {0};  // Histogram for grayscale intensities
+    int cdf[256] = {0};        // Cumulative distribution function (CDF)
+    int total_pixels = image.width * image.height;
+
+    // Step 1: Convert image to grayscale and compute the histogram
+    for (int i = 0; i < image.height; ++i) {
+        for (int j = 0; j < image.width; ++j) {
+            // Convert pixel to grayscale using a weighted sum
+            unsigned char gray_value = 0.3 * image.pixels[i][j].red + 
+                                       0.59 * image.pixels[i][j].green + 
+                                       0.11 * image.pixels[i][j].blue;
+            histogram[gray_value]++;
+        }
+    }
+
+    // Step 2: Compute the CDF from the histogram
+    cdf[0] = histogram[0];
+    for (int i = 1; i < 256; ++i) {
+        cdf[i] = cdf[i - 1] + histogram[i];
+    }
+
+    // Step 3: Normalize the CDF and map pixel intensities
+    for (int i = 0; i < image.height; ++i) {
+        for (int j = 0; j < image.width; ++j) {
+            unsigned char gray_value = 0.3 * image.pixels[i][j].red + 
+                                       0.59 * image.pixels[i][j].green + 
+                                       0.11 * image.pixels[i][j].blue;
+            // Map the grayscale value to the new intensity based on the CDF
+            unsigned char new_value = ((float)(cdf[gray_value] - cdf[0]) / (total_pixels - cdf[0])) * 255;
+
+            // Apply the new intensity value to all channels (equalized grayscale)
+            image.pixels[i][j].red = new_value;
+            image.pixels[i][j].green = new_value;
+            image.pixels[i][j].blue = new_value;
+        }
+    }
+
+    // Save the result and free memory
+    strcat(image.file_name, "_histogram_equalized");
+    save_image(image);  // Save the modified image
+    free_pixels(image);
+    printf("\n Histogram equalization applied and image saved.\n");
+}
+
 void flip_horizontal_image()
 {
 	RGB_Image image;
