@@ -1,5 +1,8 @@
 // bitmapManager.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+
+// How to run the code:
+// clang++ bitmapManager.cpp -o bitmapManager
+// ./bitmapManager
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
