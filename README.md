@@ -147,11 +147,6 @@ Feel free to contribute to this project. Fork the repository, make your changes,
 
 ---
 
-## License
-This project is licensed under the MIT License.
-
----
-
 ## Acknowledgments
 Special thanks to:
 - **gnuplot** for histogram plotting.
