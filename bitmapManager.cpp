@@ -419,7 +419,7 @@ void generate_and_plot_histogram() {
     // Initialize a histogram array for grayscale values (0-255)
     int histogram[256] = {0};
 
-    // Step 1: Compute the histogram
+    // Compute the histogram
     for (int i = 0; i < image.height; ++i) {
         for (int j = 0; j < image.width; ++j) {
             // Convert pixel to grayscale using a weighted sum
@@ -430,7 +430,7 @@ void generate_and_plot_histogram() {
         }
     }
 
-    // Step 2: Save the histogram data to a CSV file (in the background)
+    // Save the histogram data to a CSV file (in the background)
     FILE* fptr = fopen("histogram_data.csv", "w");
     if (fptr == NULL) {
         printf("\n Error saving histogram data.\n");
@@ -443,7 +443,7 @@ void generate_and_plot_histogram() {
     fclose(fptr);
     printf("\n Histogram data saved to 'histogram_data.csv'.\n");
 
-    // Step 3: Use gnuplot to automatically plot the histogram
+    // Use gnuplot to automatically plot the histogram
     system("gnuplot -e \"set datafile separator ','; set title 'Image Histogram'; "
            "set xlabel 'Pixel Intensity'; set ylabel 'Pixel Count'; "
            "set style fill solid; plot 'histogram_data.csv' using 1:2 with boxes notitle; pause -1\"");
